@@ -1,0 +1,19 @@
+{
+  "id": "replace-with-model-and-build",
+  "name": "Unverified profile template — do not move to verified without physical testing",
+  "models": ["MODEL_FROM_getprop_ro.product.model"],
+  "fingerprints": ["EXACT_VALUE_FROM_getprop_ro.build.fingerprint"],
+  "sdk": 30,
+  "tested_on": "Describe the physical tablet, Fire OS build, test duration and recovery test",
+  "allow_home_assignment": false,
+  "packages": [
+    {
+      "package": "com.amazon.example.optional",
+      "risk": "optional",
+      "title": "Example only",
+      "reason": "Replace this with evidence from dumpsys package and physical testing.",
+      "effects": "Describe every user-visible feature affected.",
+      "default": false
+    }
+  ]
+}

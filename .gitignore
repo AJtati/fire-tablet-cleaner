@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+backups/
+launcher/.gradle/
+launcher/local.properties
+launcher/app/build/
+*.apk
+*.aab
+.DS_Store
