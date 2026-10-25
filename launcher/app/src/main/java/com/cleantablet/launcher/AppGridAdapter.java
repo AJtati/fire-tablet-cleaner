@@ -16,12 +16,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class AppGridAdapter extends BaseAdapter {
+    interface OnAppActionListener {
+        void onAppClick(LaunchableApp app);
+        void onAppLongClick(LaunchableApp app);
+    }
+
     private final Context context;
     private final List<LaunchableApp> apps = new ArrayList<>();
     private final int rippleResId;
+    private final OnAppActionListener listener;
 
-    AppGridAdapter(Context context) {
+    AppGridAdapter(Context context, OnAppActionListener listener) {
         this.context = context;
+        this.listener = listener;
         TypedValue value = new TypedValue();
         if (context.getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, value, true)) {
             rippleResId = value.resourceId;
@@ -85,6 +92,15 @@ final class AppGridAdapter extends BaseAdapter {
         holder.icon.setImageDrawable(app.icon);
         holder.label.setText(app.label);
         recycled.setContentDescription(app.label + (app.favorite ? ", favourite" : ""));
+
+        if (listener != null) {
+            recycled.setOnClickListener(v -> listener.onAppClick(app));
+            recycled.setOnLongClickListener(v -> {
+                listener.onAppLongClick(app);
+                return true;
+            });
+        }
+
         return recycled;
     }
 

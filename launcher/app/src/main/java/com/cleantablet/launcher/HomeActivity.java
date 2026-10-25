@@ -1,6 +1,7 @@
 package com.cleantablet.launcher;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.WallpaperManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -8,15 +9,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -24,19 +25,21 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.InputStream;
 import java.text.Collator;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 public final class HomeActivity extends Activity {
     private static final String PREFS = "home";
-    private static final String FAVORITES = "favorites";
+    private static final String KEY_GRID_ORDER = "grid_order_list";
+    private static final String KEY_DOCK_ORDER = "dock_order_list";
+    private static final int REQUEST_PICK_WALLPAPER = 1001;
+
     private final List<LaunchableApp> allApps = new ArrayList<>();
     private AppGridAdapter adapter;
     private EditText search;
@@ -65,18 +68,25 @@ public final class HomeActivity extends Activity {
         date = findViewById(R.id.date);
         dock = findViewById(R.id.dock);
         grid = findViewById(R.id.apps);
-        adapter = new AppGridAdapter(this);
-        grid.setAdapter(adapter);
-        grid.setOnItemClickListener((parent, view, position, id) -> launch(adapter.getItem(position)));
-        grid.setOnItemLongClickListener((parent, view, position, id) -> {
-            toggleFavorite(adapter.getItem(position));
-            return true;
+        adapter = new AppGridAdapter(this, new AppGridAdapter.OnAppActionListener() {
+            @Override
+            public void onAppClick(LaunchableApp app) {
+                launch(app);
+            }
+
+            @Override
+            public void onAppLongClick(LaunchableApp app) {
+                showGridAppOptions(app);
+            }
         });
+        grid.setAdapter(adapter);
+
         search.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) { filter(s.toString()); }
             @Override public void afterTextChanged(Editable s) { }
         });
+
         findViewById(R.id.wallpaper).setOnClickListener(view -> chooseWallpaper());
         loadApps();
     }
@@ -90,7 +100,6 @@ public final class HomeActivity extends Activity {
         if (grid != null) {
             grid.smoothScrollToPosition(0);
         }
-        // Do not call super.onBackPressed() so pressing Back stays on this launcher
     }
 
     @Override
@@ -118,11 +127,36 @@ public final class HomeActivity extends Activity {
         super.onPause();
     }
 
+    private List<String> getSavedOrder(String key) {
+        String saved = preferences.getString(key, "");
+        List<String> list = new ArrayList<>();
+        if (!saved.isEmpty()) {
+            for (String pkg : saved.split(",")) {
+                String clean = pkg.trim();
+                if (!clean.isEmpty() && !list.contains(clean)) {
+                    list.add(clean);
+                }
+            }
+        }
+        return list;
+    }
+
+    private void saveOrder(String key, List<String> list) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(list.get(i));
+        }
+        preferences.edit().putString(key, sb.toString()).apply();
+    }
+
     private void loadApps() {
         PackageManager pm = getPackageManager();
         Intent query = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
         List<ResolveInfo> resolved = pm.queryIntentActivities(query, 0);
-        Set<String> favorites = preferences.getStringSet(FAVORITES, new HashSet<>());
+        List<String> dockOrder = getSavedOrder(KEY_DOCK_ORDER);
+        List<String> gridOrder = getSavedOrder(KEY_GRID_ORDER);
+
         List<LaunchableApp> loaded = new ArrayList<>();
         for (ResolveInfo item : resolved) {
             if (item.activityInfo == null || getPackageName().equals(item.activityInfo.packageName)) continue;
@@ -130,14 +164,28 @@ public final class HomeActivity extends Activity {
             if ("com.amazon.kindle.kso".equals(pkg) || "com.amazon.csapp".equals(pkg) || "com.amazon.webapp".equals(pkg)) continue;
             String label = String.valueOf(item.loadLabel(pm));
             loaded.add(new LaunchableApp(label, pkg,
-                    new ComponentName(pkg, item.activityInfo.name), item.loadIcon(pm), favorites.contains(pkg)));
+                    new ComponentName(pkg, item.activityInfo.name), item.loadIcon(pm), dockOrder.contains(pkg)));
         }
+
+        // Sort apps according to user-defined grid order; unlisted apps placed at end
         Collator collator = Collator.getInstance();
         Collections.sort(loaded, (a, b) -> {
-            if (a.favorite != b.favorite) return a.favorite ? -1 : 1;
-            int label = collator.compare(a.label, b.label);
-            return label != 0 ? label : a.packageName.compareTo(b.packageName);
+            int indexA = gridOrder.indexOf(a.packageName);
+            int indexB = gridOrder.indexOf(b.packageName);
+            if (indexA != -1 && indexB != -1) return Integer.compare(indexA, indexB);
+            if (indexA != -1) return -1;
+            if (indexB != -1) return 1;
+            int labelComp = collator.compare(a.label, b.label);
+            return labelComp != 0 ? labelComp : a.packageName.compareTo(b.packageName);
         });
+
+        // Persist complete grid order
+        List<String> updatedGridOrder = new ArrayList<>();
+        for (LaunchableApp app : loaded) {
+            updatedGridOrder.add(app.packageName);
+        }
+        saveOrder(KEY_GRID_ORDER, updatedGridOrder);
+
         allApps.clear();
         allApps.addAll(loaded);
         populateDock();
@@ -152,23 +200,42 @@ public final class HomeActivity extends Activity {
 
     private void populateDock() {
         dock.removeAllViews();
-        List<LaunchableApp> dockApps = new ArrayList<>();
-        for (LaunchableApp app : allApps) {
-            if (app.favorite) {
-                dockApps.add(app);
-            }
-        }
-        if (dockApps.isEmpty()) {
-            for (LaunchableApp app : allApps) {
-                if ("com.amazon.avod".equals(app.packageName)) {
-                    dockApps.add(app);
-                    break;
+        List<String> dockOrder = getSavedOrder(KEY_DOCK_ORDER);
+
+        // If dock order is uninitialized, seed with sensible defaults
+        if (dockOrder.isEmpty()) {
+            String[] defaults = new String[] {
+                    "com.android.settings", "com.android.documentsui",
+                    "com.android.gallery3d", "com.amazon.avod", "com.amazon.venezia"
+            };
+            for (String d : defaults) {
+                for (LaunchableApp app : allApps) {
+                    if (d.equals(app.packageName) && !dockOrder.contains(d)) {
+                        dockOrder.add(d);
+                        break;
+                    }
                 }
             }
+            if (dockOrder.isEmpty() && !allApps.isEmpty()) {
+                for (int i = 0; i < Math.min(5, allApps.size()); i++) {
+                    dockOrder.add(allApps.get(i).packageName);
+                }
+            }
+            saveOrder(KEY_DOCK_ORDER, dockOrder);
+        }
+
+        // Update favorite flags
+        for (LaunchableApp app : allApps) {
+            app.favorite = dockOrder.contains(app.packageName);
+        }
+
+        // Gather dock apps in exact dockOrder
+        List<LaunchableApp> dockApps = new ArrayList<>();
+        for (String pkg : dockOrder) {
             for (LaunchableApp app : allApps) {
-                if (dockApps.size() >= 5) break;
-                if (!dockApps.contains(app)) {
+                if (pkg.equals(app.packageName)) {
                     dockApps.add(app);
+                    break;
                 }
             }
         }
@@ -185,12 +252,142 @@ public final class HomeActivity extends Activity {
             }
             button.setOnClickListener(view -> launch(app));
             button.setOnLongClickListener(view -> {
-                toggleFavorite(app);
+                showDockAppOptions(app);
                 return true;
             });
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(54), dp(54));
             params.setMargins(dp(8), 0, dp(8), 0);
             dock.addView(button, params);
+        }
+    }
+
+    private void showGridAppOptions(LaunchableApp app) {
+        List<String> gridOrder = getSavedOrder(KEY_GRID_ORDER);
+        int currentIndex = gridOrder.indexOf(app.packageName);
+        List<String> dockOrder = getSavedOrder(KEY_DOCK_ORDER);
+        boolean inDock = dockOrder.contains(app.packageName);
+
+        List<String> options = new ArrayList<>();
+        List<Runnable> actions = new ArrayList<>();
+
+        if (currentIndex > 0) {
+            options.add("◀ Move Left");
+            actions.add(() -> moveGridApp(app.packageName, currentIndex - 1));
+        }
+        if (currentIndex >= 0 && currentIndex < gridOrder.size() - 1) {
+            options.add("▶ Move Right");
+            actions.add(() -> moveGridApp(app.packageName, currentIndex + 1));
+        }
+        if (currentIndex > 0) {
+            options.add("⬆ Move to Top");
+            actions.add(() -> moveGridApp(app.packageName, 0));
+        }
+        if (currentIndex >= 0 && currentIndex < gridOrder.size() - 1) {
+            options.add("⬇ Move to Bottom");
+            actions.add(() -> moveGridApp(app.packageName, gridOrder.size() - 1));
+        }
+
+        if (inDock) {
+            options.add("✖ Remove from Dock");
+            actions.add(() -> removeDockApp(app.packageName));
+        } else {
+            options.add("⭐ Add to Dock");
+            actions.add(() -> addDockApp(app.packageName));
+        }
+
+        options.add("ℹ App Info");
+        actions.add(() -> openAppInfo(app.packageName));
+
+        new AlertDialog.Builder(this)
+                .setTitle(app.label)
+                .setItems(options.toArray(new CharSequence[0]), (dialog, which) -> {
+                    if (which >= 0 && which < actions.size()) {
+                        actions.get(which).run();
+                    }
+                })
+                .show();
+    }
+
+    private void showDockAppOptions(LaunchableApp app) {
+        List<String> dockOrder = getSavedOrder(KEY_DOCK_ORDER);
+        int currentIndex = dockOrder.indexOf(app.packageName);
+
+        List<String> options = new ArrayList<>();
+        List<Runnable> actions = new ArrayList<>();
+
+        if (currentIndex > 0) {
+            options.add("◀ Move Left in Dock");
+            actions.add(() -> moveDockApp(currentIndex, currentIndex - 1));
+        }
+        if (currentIndex >= 0 && currentIndex < dockOrder.size() - 1) {
+            options.add("▶ Move Right in Dock");
+            actions.add(() -> moveDockApp(currentIndex, currentIndex + 1));
+        }
+
+        options.add("✖ Remove from Dock");
+        actions.add(() -> removeDockApp(app.packageName));
+
+        options.add("ℹ App Info");
+        actions.add(() -> openAppInfo(app.packageName));
+
+        new AlertDialog.Builder(this)
+                .setTitle(app.label + " (Dock)")
+                .setItems(options.toArray(new CharSequence[0]), (dialog, which) -> {
+                    if (which >= 0 && which < actions.size()) {
+                        actions.get(which).run();
+                    }
+                })
+                .show();
+    }
+
+    private void moveGridApp(String packageName, int targetIndex) {
+        List<String> gridOrder = getSavedOrder(KEY_GRID_ORDER);
+        int currentIndex = gridOrder.indexOf(packageName);
+        if (currentIndex != -1 && targetIndex >= 0 && targetIndex < gridOrder.size()) {
+            gridOrder.remove(currentIndex);
+            gridOrder.add(targetIndex, packageName);
+            saveOrder(KEY_GRID_ORDER, gridOrder);
+            loadApps();
+        }
+    }
+
+    private void moveDockApp(int currentIndex, int targetIndex) {
+        List<String> dockOrder = getSavedOrder(KEY_DOCK_ORDER);
+        if (currentIndex >= 0 && currentIndex < dockOrder.size()
+                && targetIndex >= 0 && targetIndex < dockOrder.size()) {
+            String item = dockOrder.remove(currentIndex);
+            dockOrder.add(targetIndex, item);
+            saveOrder(KEY_DOCK_ORDER, dockOrder);
+            populateDock();
+        }
+    }
+
+    private void addDockApp(String packageName) {
+        List<String> dockOrder = getSavedOrder(KEY_DOCK_ORDER);
+        if (!dockOrder.contains(packageName)) {
+            dockOrder.add(packageName);
+            saveOrder(KEY_DOCK_ORDER, dockOrder);
+            loadApps();
+            Toast.makeText(this, "Added to dock", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void removeDockApp(String packageName) {
+        List<String> dockOrder = getSavedOrder(KEY_DOCK_ORDER);
+        if (dockOrder.remove(packageName)) {
+            saveOrder(KEY_DOCK_ORDER, dockOrder);
+            loadApps();
+            Toast.makeText(this, "Removed from dock", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void openAppInfo(String packageName) {
+        try {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + packageName));
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Unable to open app info", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -222,30 +419,12 @@ public final class HomeActivity extends Activity {
         }
     }
 
-    private void toggleFavorite(LaunchableApp app) {
-        Set<String> favorites = new HashSet<>(preferences.getStringSet(FAVORITES, new HashSet<>()));
-        boolean added;
-        if (favorites.contains(app.packageName)) {
-            favorites.remove(app.packageName);
-            added = false;
-        } else {
-            favorites.add(app.packageName);
-            added = true;
-        }
-        preferences.edit().putStringSet(FAVORITES, favorites).apply();
-        Toast.makeText(this, getString(added ? R.string.favorite_added : R.string.favorite_removed, app.label),
-                Toast.LENGTH_SHORT).show();
-        loadApps();
-    }
-
-    private static final int REQUEST_PICK_WALLPAPER = 1001;
-
     private void chooseWallpaper() {
         CharSequence[] options = new CharSequence[] {
                 getString(R.string.wallpaper_photos),
                 getString(R.string.wallpaper_system)
         };
-        new android.app.AlertDialog.Builder(this)
+        new AlertDialog.Builder(this)
                 .setTitle(R.string.wallpaper)
                 .setItems(options, (dialog, which) -> {
                     if (which == 0) {
@@ -272,7 +451,7 @@ public final class HomeActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_PICK_WALLPAPER && resultCode == RESULT_OK && data != null && data.getData() != null) {
             try {
-                java.io.InputStream is = getContentResolver().openInputStream(data.getData());
+                InputStream is = getContentResolver().openInputStream(data.getData());
                 if (is != null) {
                     WallpaperManager wm = WallpaperManager.getInstance(getApplicationContext());
                     wm.setStream(is);

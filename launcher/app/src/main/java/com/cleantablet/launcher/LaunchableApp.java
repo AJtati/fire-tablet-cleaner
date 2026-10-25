@@ -8,7 +8,7 @@ final class LaunchableApp {
     final String packageName;
     final ComponentName component;
     final Drawable icon;
-    final boolean favorite;
+    boolean favorite;
 
     LaunchableApp(String label, String packageName, ComponentName component, Drawable icon, boolean favorite) {
         this.label = label;
