@@ -1,9 +1,11 @@
 <resources>
     <string name="app_name">Clean Tablet Home</string>
     <string name="search_hint">Search apps</string>
-    <string name="wallpaper">Wallpaper</string>
+    <string name="wallpaper">Choose wallpaper</string>
     <string name="empty_apps">No matching apps</string>
     <string name="favorite_added">Added %1$s to favourites</string>
     <string name="favorite_removed">Removed %1$s from favourites</string>
-    <string name="favorite_help">Tap to open. Touch and hold to add or remove a favourite.</string>
+    <string name="favorite_help">Touch and hold an app to add it to the dock</string>
+    <string name="dock_hint">Your favourites will appear here</string>
+    <string name="open_favorite">Open %1$s</string>
 </resources>

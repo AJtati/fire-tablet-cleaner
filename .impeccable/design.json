@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-25T00:00:00Z",
+  "title": "Design System: Clean Tablet Home",
+  "extensions": {
+    "colorMeta": {
+      "wallpaper-wash": { "role": "neutral", "displayName": "Wallpaper Wash", "canonical": "#52131A23" },
+      "dock-surface": { "role": "neutral", "displayName": "Dock Charcoal", "canonical": "#B3222933" },
+      "accent-sky": { "role": "primary", "displayName": "Accent Sky", "canonical": "#FF86D7FF" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Clock", "purpose": "Time at the top of the home screen." },
+      "label": { "displayName": "App Label", "purpose": "Short app names and helper text." }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [
+      { "name": "landscape", "value": "orientation: landscape" }
+    ],
+    "rules": [
+      "Wallpaper first: keep large surfaces translucent.",
+      "Use native static views; never add blur or decorative motion.",
+      "Keep every interactive target at least 48dp."
+    ]
+  }
+}

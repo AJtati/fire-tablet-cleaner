@@ -2,8 +2,6 @@ package com.cleantablet.launcher;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,16 +41,18 @@ final class AppGridAdapter extends BaseAdapter {
         if (recycled == null) {
             LinearLayout card = new LinearLayout(context);
             card.setOrientation(LinearLayout.VERTICAL);
-            card.setGravity(Gravity.CENTER);
-            card.setPadding(dp(8), dp(10), dp(8), dp(8));
-            card.setMinimumHeight(dp(118));
+            card.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+            card.setPadding(dp(4), dp(6), dp(4), dp(4));
+            card.setMinimumHeight(dp(104));
             ImageView icon = new ImageView(context);
-            card.addView(icon, new LinearLayout.LayoutParams(dp(64), dp(64)));
+            icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            card.addView(icon, new LinearLayout.LayoutParams(dp(66), dp(66)));
             TextView label = new TextView(context);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(2);
             label.setTextColor(Color.WHITE);
-            label.setTextSize(13);
+            label.setTextSize(12);
+            label.setShadowLayer(3f, 0f, dp(1), 0xCC000000);
             LinearLayout.LayoutParams text = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT);
             text.topMargin = dp(6);
@@ -65,12 +65,8 @@ final class AppGridAdapter extends BaseAdapter {
         }
         LaunchableApp app = getItem(position);
         holder.icon.setImageDrawable(app.icon);
-        holder.label.setText(app.favorite ? "★ " + app.label : app.label);
-        holder.label.setTypeface(null, app.favorite ? Typeface.BOLD : Typeface.NORMAL);
-        GradientDrawable background = new GradientDrawable();
-        background.setColor(app.favorite ? 0xE6334A4A : 0xD92A2E37);
-        background.setCornerRadius(dp(18));
-        recycled.setBackground(background);
+        holder.label.setText(app.label);
+        recycled.setBackgroundColor(Color.TRANSPARENT);
         recycled.setContentDescription(app.label + (app.favorite ? ", favourite" : ""));
         return recycled;
     }

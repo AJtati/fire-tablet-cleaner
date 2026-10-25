@@ -9,17 +9,26 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.Collator;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +41,18 @@ public final class HomeActivity extends Activity {
     private AppGridAdapter adapter;
     private EditText search;
     private TextView empty;
+    private TextView clock;
+    private TextView date;
+    private LinearLayout dock;
+    private GridView grid;
     private SharedPreferences preferences;
+    private final Handler clockHandler = new Handler(Looper.getMainLooper());
+    private final Runnable clockTick = new Runnable() {
+        @Override public void run() {
+            updateClock();
+            clockHandler.postDelayed(this, 30_000L);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle state) {
@@ -41,7 +61,10 @@ public final class HomeActivity extends Activity {
         preferences = getSharedPreferences(PREFS, MODE_PRIVATE);
         search = findViewById(R.id.search);
         empty = findViewById(R.id.empty);
-        GridView grid = findViewById(R.id.apps);
+        clock = findViewById(R.id.clock);
+        date = findViewById(R.id.date);
+        dock = findViewById(R.id.dock);
+        grid = findViewById(R.id.apps);
         adapter = new AppGridAdapter(this);
         grid.setAdapter(adapter);
         grid.setOnItemClickListener((parent, view, position, id) -> launch(adapter.getItem(position)));
@@ -61,7 +84,15 @@ public final class HomeActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        clockHandler.removeCallbacks(clockTick);
+        clockTick.run();
         loadApps();
+    }
+
+    @Override
+    protected void onPause() {
+        clockHandler.removeCallbacks(clockTick);
+        super.onPause();
     }
 
     private void loadApps() {
@@ -85,7 +116,53 @@ public final class HomeActivity extends Activity {
         });
         allApps.clear();
         allApps.addAll(loaded);
+        populateDock();
         filter(search.getText().toString());
+    }
+
+    private void updateClock() {
+        Date now = new Date();
+        clock.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(now));
+        date.setText(new SimpleDateFormat("EEEE, d MMMM", Locale.getDefault()).format(now));
+    }
+
+    private void populateDock() {
+        dock.removeAllViews();
+        int count = 0;
+        for (LaunchableApp app : allApps) {
+            if (!app.favorite) continue;
+            ImageButton button = new ImageButton(this);
+            button.setImageDrawable(app.icon);
+            button.setScaleType(ImageButton.ScaleType.FIT_CENTER);
+            button.setPadding(dp(6), dp(6), dp(6), dp(6));
+            button.setContentDescription(getString(R.string.open_favorite, app.label));
+            TypedValue value = new TypedValue();
+            if (getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, value, true)) {
+                button.setBackgroundResource(value.resourceId);
+            }
+            button.setOnClickListener(view -> launch(app));
+            button.setOnLongClickListener(view -> {
+                toggleFavorite(app);
+                return true;
+            });
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(64), dp(64));
+            params.setMargins(dp(5), 0, dp(5), 0);
+            dock.addView(button, params);
+            count++;
+        }
+        if (count == 0) {
+            TextView hint = new TextView(this);
+            hint.setText(R.string.dock_hint);
+            hint.setTextColor(getResources().getColor(R.color.text_secondary));
+            hint.setTextSize(13);
+            hint.setGravity(Gravity.CENTER);
+            dock.addView(hint, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private void filter(String text) {
@@ -96,7 +173,9 @@ public final class HomeActivity extends Activity {
                     || app.packageName.toLowerCase(Locale.ROOT).contains(needle)) shown.add(app);
         }
         adapter.replace(shown);
-        empty.setVisibility(shown.isEmpty() ? View.VISIBLE : View.GONE);
+        boolean hasApps = !shown.isEmpty();
+        grid.setVisibility(hasApps ? View.VISIBLE : View.GONE);
+        empty.setVisibility(hasApps ? View.GONE : View.VISIBLE);
     }
 
     private void launch(LaunchableApp app) {
