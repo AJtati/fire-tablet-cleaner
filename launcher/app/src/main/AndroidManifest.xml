@@ -23,7 +23,9 @@
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true"
             android:launchMode="singleInstance"
+            android:taskAffinity=""
             android:excludeFromRecents="true"
+            android:autoRemoveFromRecents="true"
             android:clearTaskOnLaunch="true"
             android:resumeWhilePausing="true"
             android:stateNotNeeded="true">
