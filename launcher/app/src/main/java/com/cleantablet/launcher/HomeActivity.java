@@ -50,7 +50,7 @@ public final class HomeActivity extends Activity {
     private final Runnable clockTick = new Runnable() {
         @Override public void run() {
             updateClock();
-            clockHandler.postDelayed(this, 30_000L);
+            clockHandler.postDelayed(this, 10_000L);
         }
     };
 
@@ -82,6 +82,29 @@ public final class HomeActivity extends Activity {
     }
 
     @Override
+    public void onBackPressed() {
+        if (search != null && search.getText().length() > 0) {
+            search.setText("");
+            return;
+        }
+        if (grid != null) {
+            grid.smoothScrollToPosition(0);
+        }
+        // Do not call super.onBackPressed() so pressing Back stays on this launcher
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (search != null && search.getText().length() > 0) {
+            search.setText("");
+        }
+        if (grid != null) {
+            grid.smoothScrollToPosition(0);
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         clockHandler.removeCallbacks(clockTick);
@@ -104,6 +127,7 @@ public final class HomeActivity extends Activity {
         for (ResolveInfo item : resolved) {
             if (item.activityInfo == null || getPackageName().equals(item.activityInfo.packageName)) continue;
             String pkg = item.activityInfo.packageName;
+            if ("com.amazon.kindle.kso".equals(pkg) || "com.amazon.csapp".equals(pkg) || "com.amazon.webapp".equals(pkg)) continue;
             String label = String.valueOf(item.loadLabel(pm));
             loaded.add(new LaunchableApp(label, pkg,
                     new ComponentName(pkg, item.activityInfo.name), item.loadIcon(pm), favorites.contains(pkg)));
@@ -128,9 +152,28 @@ public final class HomeActivity extends Activity {
 
     private void populateDock() {
         dock.removeAllViews();
-        int count = 0;
+        List<LaunchableApp> dockApps = new ArrayList<>();
         for (LaunchableApp app : allApps) {
-            if (!app.favorite) continue;
+            if (app.favorite) {
+                dockApps.add(app);
+            }
+        }
+        if (dockApps.isEmpty()) {
+            for (LaunchableApp app : allApps) {
+                if ("com.amazon.avod".equals(app.packageName)) {
+                    dockApps.add(app);
+                    break;
+                }
+            }
+            for (LaunchableApp app : allApps) {
+                if (dockApps.size() >= 5) break;
+                if (!dockApps.contains(app)) {
+                    dockApps.add(app);
+                }
+            }
+        }
+
+        for (LaunchableApp app : dockApps) {
             ImageButton button = new ImageButton(this);
             button.setImageDrawable(app.icon);
             button.setScaleType(ImageButton.ScaleType.FIT_CENTER);
@@ -145,19 +188,9 @@ public final class HomeActivity extends Activity {
                 toggleFavorite(app);
                 return true;
             });
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(64), dp(64));
-            params.setMargins(dp(5), 0, dp(5), 0);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(54), dp(54));
+            params.setMargins(dp(8), 0, dp(8), 0);
             dock.addView(button, params);
-            count++;
-        }
-        if (count == 0) {
-            TextView hint = new TextView(this);
-            hint.setText(R.string.dock_hint);
-            hint.setTextColor(getResources().getColor(R.color.text_secondary));
-            hint.setTextSize(13);
-            hint.setGravity(Gravity.CENTER);
-            dock.addView(hint, new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
     }
 

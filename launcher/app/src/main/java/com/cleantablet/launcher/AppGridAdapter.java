@@ -2,6 +2,8 @@ package com.cleantablet.launcher;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,9 +18,16 @@ import java.util.List;
 final class AppGridAdapter extends BaseAdapter {
     private final Context context;
     private final List<LaunchableApp> apps = new ArrayList<>();
+    private final int rippleResId;
 
     AppGridAdapter(Context context) {
         this.context = context;
+        TypedValue value = new TypedValue();
+        if (context.getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, value, true)) {
+            rippleResId = value.resourceId;
+        } else {
+            rippleResId = 0;
+        }
     }
 
     void replace(List<LaunchableApp> next) {
@@ -42,31 +51,39 @@ final class AppGridAdapter extends BaseAdapter {
             LinearLayout card = new LinearLayout(context);
             card.setOrientation(LinearLayout.VERTICAL);
             card.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-            card.setPadding(dp(4), dp(6), dp(4), dp(4));
-            card.setMinimumHeight(dp(104));
+            card.setPadding(dp(4), dp(8), dp(4), dp(6));
+            card.setMinimumHeight(dp(92));
+            if (rippleResId != 0) {
+                card.setBackgroundResource(rippleResId);
+            }
+
             ImageView icon = new ImageView(context);
             icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            card.addView(icon, new LinearLayout.LayoutParams(dp(66), dp(66)));
+            card.addView(icon, new LinearLayout.LayoutParams(dp(52), dp(52)));
+
             TextView label = new TextView(context);
             label.setGravity(Gravity.CENTER);
-            label.setMaxLines(2);
+            label.setMaxLines(1);
+            label.setEllipsize(TextUtils.TruncateAt.END);
             label.setTextColor(Color.WHITE);
-            label.setTextSize(12);
-            label.setShadowLayer(3f, 0f, dp(1), 0xCC000000);
-            LinearLayout.LayoutParams text = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
-            text.topMargin = dp(6);
-            card.addView(label, text);
+            label.setTextSize(11.5f);
+            label.setShadowLayer(3f, 0f, dp(1), 0xAA000000);
+
+            LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            textParams.topMargin = dp(6);
+            card.addView(label, textParams);
+
             holder = new Holder(icon, label);
             card.setTag(holder);
             recycled = card;
         } else {
             holder = (Holder) recycled.getTag();
         }
+
         LaunchableApp app = getItem(position);
         holder.icon.setImageDrawable(app.icon);
         holder.label.setText(app.label);
-        recycled.setBackgroundColor(Color.TRANSPARENT);
         recycled.setContentDescription(app.label + (app.favorite ? ", favourite" : ""));
         return recycled;
     }

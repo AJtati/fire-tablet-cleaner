@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/custom_nav_bar_root"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:background="@drawable/nav_bar_background"
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
+
+    <ImageButton
+        android:id="@+id/btn_nav_back"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@drawable/nav_button_ripple"
+        android:contentDescription="Back"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_nav_back" />
+
+    <ImageButton
+        android:id="@+id/btn_nav_home"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@drawable/nav_button_ripple"
+        android:contentDescription="Home"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_nav_home" />
+
+    <ImageButton
+        android:id="@+id/btn_nav_recents"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@drawable/nav_button_ripple"
+        android:contentDescription="Recent Apps"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_nav_recents" />
+
+</LinearLayout>

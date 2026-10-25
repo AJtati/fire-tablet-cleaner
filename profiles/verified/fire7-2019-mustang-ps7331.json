@@ -1,0 +1,423 @@
+{
+  "id": "fire7-2019-mustang-ps7331",
+  "name": "Amazon Fire 7 (9th Gen, 2019) Fire OS 7.3.3.1 (mustang)",
+  "models": [
+    "KFMUWI"
+  ],
+  "fingerprints": [
+    "Amazon/mustang/mustang:9/PS7331.4463N/0031575863040:user/amz-p,release-keys"
+  ],
+  "sdk": 28,
+  "tested_on": "Physical Fire 7 (2019) KFMUWI running Fire OS 7.3.3.1 (PS7331/4463) with 1GB RAM",
+  "allow_home_assignment": false,
+  "packages": [
+    {
+      "package": "com.amazon.kindle.kso",
+      "risk": "optional",
+      "title": "Lockscreen Ads / Special Offers",
+      "reason": "Consistently pulls lockscreen advertisements and wakes CPU, taking 90MB+ RAM. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Removes advertisements from the lockscreen.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.alexa.multimodal.gemini",
+      "risk": "safe",
+      "title": "Alexa Multimodal Service",
+      "reason": "Background voice assistant daemons consuming ~80MB RAM on idle.",
+      "effects": "Disables Alexa background listening and smart screen visual modes.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.photos",
+      "risk": "safe",
+      "title": "Amazon Photos",
+      "reason": "Background photo sync daemon consuming ~30MB RAM.",
+      "effects": "Disables Amazon Photos automatic background sync.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.venezia",
+      "risk": "optional",
+      "title": "Amazon Appstore",
+      "reason": "Background DRM and Appstore service consuming ~27MB RAM. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Disables Amazon Appstore app downloads and in-app purchasing.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.avod",
+      "risk": "optional",
+      "title": "Prime Video",
+      "reason": "Preloaded Amazon Video background components. (User requested Prime Video to be kept).",
+      "effects": "Disables Prime Video preloaded app and background service.",
+      "default": false
+    },
+    {
+      "package": "com.kingsoft.office.amz",
+      "risk": "safe",
+      "title": "WPS Office for Amazon",
+      "reason": "Third-party office suite preloaded on device with background services.",
+      "effects": "Removes preloaded WPS Office.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.client.metrics",
+      "risk": "optional",
+      "title": "Amazon Client Metrics",
+      "reason": "Continuous background user telemetry collection and reporting. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Stops telemetry collection to Amazon.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.client.metrics.api",
+      "risk": "safe",
+      "title": "Amazon Client Metrics API",
+      "reason": "API layer for reporting client telemetry.",
+      "effects": "Stops telemetry transmission.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.device.metrics",
+      "risk": "optional",
+      "title": "Device Metrics Service",
+      "reason": "Hardware logging daemon for performance and battery stats. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Stops hardware metrics collection.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.device.crashmanager",
+      "risk": "optional",
+      "title": "Crash Manager",
+      "reason": "Background daemon collecting and uploading system logs. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Prevents background log uploading.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.device.logmanager",
+      "risk": "optional",
+      "title": "Log Manager",
+      "reason": "Background system log rotation and transmission service. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Stops system log reporting.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.imp",
+      "risk": "optional",
+      "title": "Imp Telemetry Service",
+      "reason": "Internal messaging and telemetry reporting daemon. (Required for Amazon account registration and login).",
+      "effects": "Stops background analytics.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.dcpms.fos.service",
+      "risk": "optional",
+      "title": "DCPMS FOS Service",
+      "reason": "Device client platform metric service running in background. (Required for Amazon account registration and login).",
+      "effects": "Stops platform metric reporting.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.dcpms.client",
+      "risk": "optional",
+      "title": "DCPMS Client",
+      "reason": "Client library for DCPMS metrics collection. (Required for Amazon account registration and login).",
+      "effects": "Stops metric collection.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.connectivitydiag",
+      "risk": "safe",
+      "title": "Connectivity Diagnostics",
+      "reason": "Continuous diagnostic network connectivity pings.",
+      "effects": "Stops diagnostic network traffic.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.parentalcontrols",
+      "risk": "optional",
+      "title": "Amazon Parental Controls",
+      "reason": "Background parental controls daemon for Amazon Kids profiles. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Disables Amazon Kids parental control service.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.comms.kids",
+      "risk": "safe",
+      "title": "Kids Communication Service",
+      "reason": "Background messaging engine for Amazon Kids.",
+      "effects": "Disables Kids communication features.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.whisperlink.core.android",
+      "risk": "optional",
+      "title": "Whisperplay Core",
+      "reason": "Network discovery daemon connecting to other Fire devices. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Disables local device discovery and second screen casting.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.whisperlink.activityview.android",
+      "risk": "optional",
+      "title": "Whisperplay Activity View",
+      "reason": "UI component for Whisperplay casting. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Disables Whisperplay activity overlays.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.bioscope",
+      "risk": "safe",
+      "title": "Bioscope Marketing Service",
+      "reason": "Collects context for promotional recommendations.",
+      "effects": "Disables promotional recommendations.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.recess",
+      "risk": "safe",
+      "title": "Recess Service",
+      "reason": "Background usage telemetry service.",
+      "effects": "Stops usage tracking.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.sanjayan",
+      "risk": "safe",
+      "title": "Sanjayan Device Analytics",
+      "reason": "System analytics and device state collector.",
+      "effects": "Stops system analytics collection.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.speakscreen",
+      "risk": "safe",
+      "title": "Speak Screen",
+      "reason": "Amazon accessibility screen reader overlay gesture.",
+      "effects": "Disables the two-finger swipe down screen reading gesture.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.alta.h2clientservice",
+      "risk": "optional",
+      "title": "Household Profile Service",
+      "reason": "Household profile and authentication provider required by Prime Video for user playback profiles.",
+      "effects": "Disables Prime Video playback profile resolution.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.h2settingsfortablet",
+      "risk": "optional",
+      "title": "Household Settings Helper",
+      "reason": "Household settings helper required for Prime Video account mapping.",
+      "effects": "Disables household settings helper.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.accessorynotifier",
+      "risk": "safe",
+      "title": "Accessory Notifier",
+      "reason": "Promotional notification service for Amazon hardware accessories.",
+      "effects": "Disables accessory upsell notifications.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.csapp",
+      "risk": "optional",
+      "title": "Amazon Customer Service App",
+      "reason": "Support and Mayday app wrapper. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Disables customer service shortcut.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.kor.demo",
+      "risk": "safe",
+      "title": "Retail Demo Service",
+      "reason": "Kiosk demonstration service for retail store displays.",
+      "effects": "Disables retail demo mode.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.tcomm",
+      "risk": "optional",
+      "title": "Amazon TComm Service",
+      "reason": "Persistent cloud communication channel for Amazon metrics. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Disables TComm cloud messaging channel.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.tcomm.client",
+      "risk": "optional",
+      "title": "Amazon TComm Client",
+      "reason": "Client binding for TComm daemon. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Stops TComm client connections.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.tcomm.jackson",
+      "risk": "optional",
+      "title": "TComm Jackson Parser",
+      "reason": "JSON utility library for TComm. (Required for Amazon account registration and login).",
+      "effects": "None.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.redstone",
+      "risk": "safe",
+      "title": "Amazon Redstone",
+      "reason": "Background metrics logging daemon.",
+      "effects": "Stops Redstone telemetry.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.cardinal",
+      "risk": "safe",
+      "title": "Amazon Cardinal",
+      "reason": "Device recommendation engine and content tracker.",
+      "effects": "Stops content recommendation tracking.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.glorialist",
+      "risk": "safe",
+      "title": "GloriaList Service",
+      "reason": "Amazon shopping lists synchronization daemon.",
+      "effects": "Disables Amazon shopping list sync.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.adep",
+      "risk": "optional",
+      "title": "ADEP Service",
+      "reason": "Amazon device engagement prompt manager. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Stops engagement popups.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.shpm",
+      "risk": "safe",
+      "title": "SHPM Service",
+      "reason": "Smart Home presence monitoring daemon.",
+      "effects": "Disables background smart home pings.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.communication.discovery",
+      "risk": "safe",
+      "title": "Communication Discovery",
+      "reason": "Local network device discovery broadcast service.",
+      "effects": "Stops local subnet discovery broadcasts.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.fireos.cirruscloud",
+      "risk": "safe",
+      "title": "Cirrus Cloud Service",
+      "reason": "Telemetry bridge to Amazon cloud services.",
+      "effects": "Stops Cirrus cloud telemetry.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.tv.launcher",
+      "risk": "optional",
+      "title": "TV Launcher Companion",
+      "reason": "Fire TV remote casting companion interface. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Disables Fire TV remote companion.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.tv.ottssocompanionapp",
+      "risk": "optional",
+      "title": "Prime Video TV SSO Companion",
+      "reason": "Single sign-on bridge required for Prime Video account authentication.",
+      "effects": "Disables Prime Video single sign-on authentication.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.dp.fbcontacts",
+      "risk": "safe",
+      "title": "Facebook Contacts Provider",
+      "reason": "Facebook contact synchronization service.",
+      "effects": "Disables Facebook contact syncing.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.dp.contacts",
+      "risk": "safe",
+      "title": "Amazon Contacts Sync",
+      "reason": "Amazon cloud contact synchronization.",
+      "effects": "Disables Amazon cloud contact syncing.",
+      "default": true
+    },
+    {
+      "package": "jp.co.omronsoft.iwnnime.languagepack.kokr_az",
+      "risk": "safe",
+      "title": "Korean Language Pack",
+      "reason": "Preloaded Korean dictionary taking storage.",
+      "effects": "Removes Korean keyboard dictionary.",
+      "default": true
+    },
+    {
+      "package": "jp.co.omronsoft.iwnnime.languagepack.zhcn_az",
+      "risk": "safe",
+      "title": "Simplified Chinese Language Pack",
+      "reason": "Preloaded Simplified Chinese dictionary taking storage.",
+      "effects": "Removes Simplified Chinese keyboard dictionary.",
+      "default": true
+    },
+    {
+      "package": "jp.co.omronsoft.iwnnime.languagepack.zhtw_az",
+      "risk": "safe",
+      "title": "Traditional Chinese Language Pack",
+      "reason": "Preloaded Traditional Chinese dictionary taking storage.",
+      "effects": "Removes Traditional Chinese keyboard dictionary.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.android.marketplace",
+      "risk": "optional",
+      "title": "Amazon Marketplace Service",
+      "reason": "Background Amazon shopping and purchase services. (Required for Amazon account registration and login).",
+      "effects": "Disables Amazon shopping integration.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.aca",
+      "risk": "safe",
+      "title": "Amazon Companion App Bridge",
+      "reason": "Bridge connecting external companion apps.",
+      "effects": "Disables companion app bridge.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.diode",
+      "risk": "optional",
+      "title": "Amazon Diode",
+      "reason": "Metric forwarder service. (Protected by Fire OS 7.3.3.1 PackageManagerService; restricted via appops instead).",
+      "effects": "Stops background metric relay.",
+      "default": false
+    },
+    {
+      "package": "com.amazon.logan",
+      "risk": "safe",
+      "title": "Amazon Logan",
+      "reason": "Diagnostics log collector.",
+      "effects": "Stops diagnostic logging.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.sharingservice.android.client.proxy",
+      "risk": "safe",
+      "title": "Sharing Service Proxy",
+      "reason": "Amazon social sharing connector.",
+      "effects": "Disables social sharing connector.",
+      "default": true
+    },
+    {
+      "package": "com.amazon.appverification",
+      "risk": "safe",
+      "title": "Amazon App Verification",
+      "reason": "Telemetry verifying installed Amazon apps.",
+      "effects": "Stops app verification telemetry.",
+      "default": true
+    }
+  ]
+}

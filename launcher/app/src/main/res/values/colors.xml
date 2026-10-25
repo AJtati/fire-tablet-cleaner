@@ -1,9 +1,15 @@
 <resources>
-    <color name="surface">#52131A23</color>
-    <color name="surface_strong">#B8141A22</color>
-    <color name="dock_surface">#B3222933</color>
-    <color name="control_surface">#D92B323C</color>
+    <color name="surface_backdrop">#0B0F19</color>
+    <color name="surface">#111827</color>
+    <color name="surface_card">#1E293B</color>
+    <color name="surface_strong">#090D16</color>
+    <color name="dock_surface">#26334D</color>
+    <color name="dock_stroke">#38FFFFFF</color>
+    <color name="control_surface">#1E293B</color>
+    <color name="control_stroke">#33FFFFFF</color>
     <color name="text_primary">#FFFFFFFF</color>
-    <color name="text_secondary">#FFD8DCE3</color>
-    <color name="accent">#FF86D7FF</color>
+    <color name="text_secondary">#CBD5E1</color>
+    <color name="text_muted">#94A3B8</color>
+    <color name="accent">#38BDF8</color>
+    <color name="accent_glow">#2038BDF8</color>
 </resources>
