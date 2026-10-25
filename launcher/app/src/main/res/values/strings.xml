@@ -8,4 +8,7 @@
     <string name="favorite_help">Touch and hold to edit</string>
     <string name="dock_hint">Favorites</string>
     <string name="open_favorite">Open %1$s</string>
+    <string name="wallpaper_photos">Choose from Photos</string>
+    <string name="wallpaper_system">System Wallpapers</string>
+    <string name="wallpaper_success">Wallpaper updated</string>
 </resources>

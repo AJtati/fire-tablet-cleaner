@@ -1,40 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/custom_nav_bar_root"
     android:layout_width="match_parent"
-    android:layout_height="48dp"
-    android:background="@drawable/nav_bar_background"
-    android:orientation="horizontal"
-    android:gravity="center_vertical">
+    android:layout_height="wrap_content">
 
-    <ImageButton
-        android:id="@+id/btn_nav_back"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="@drawable/nav_button_ripple"
-        android:contentDescription="Back"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_nav_back" />
+    <!-- Thin Swipe-Up Handle Trigger Zone (Active when in other apps) -->
+    <FrameLayout
+        android:id="@+id/nav_handle_container"
+        android:layout_width="match_parent"
+        android:layout_height="14dp"
+        android:layout_gravity="bottom"
+        android:background="@android:color/transparent"
+        android:visibility="gone">
 
-    <ImageButton
-        android:id="@+id/btn_nav_home"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="@drawable/nav_button_ripple"
-        android:contentDescription="Home"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_nav_home" />
+        <View
+            android:id="@+id/nav_indicator_pill"
+            android:layout_width="72dp"
+            android:layout_height="3dp"
+            android:layout_gravity="center"
+            android:background="@drawable/nav_indicator_pill" />
+    </FrameLayout>
 
-    <ImageButton
-        android:id="@+id/btn_nav_recents"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="@drawable/nav_button_ripple"
-        android:contentDescription="Recent Apps"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_nav_recents" />
+    <!-- Full 3-Button Navigation Bar (Active on Home screen & when expanded) -->
+    <LinearLayout
+        android:id="@+id/nav_buttons_container"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/nav_bar_background"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-</LinearLayout>
+        <ImageButton
+            android:id="@+id/btn_nav_back"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/nav_button_ripple"
+            android:contentDescription="Back"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_nav_back" />
+
+        <ImageButton
+            android:id="@+id/btn_nav_home"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/nav_button_ripple"
+            android:contentDescription="Home"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_nav_home" />
+
+        <ImageButton
+            android:id="@+id/btn_nav_recents"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/nav_button_ripple"
+            android:contentDescription="Recent Apps"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_nav_recents" />
+
+    </LinearLayout>
+
+</FrameLayout>

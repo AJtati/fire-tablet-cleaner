@@ -14,6 +14,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
@@ -28,6 +29,16 @@ public final class LauncherAccessibilityService extends AccessibilityService {
 
     private WindowManager windowManager;
     private View navBarOverlay;
+    private View buttonsContainer;
+    private View handleContainer;
+    private WindowManager.LayoutParams overlayParams;
+
+    private boolean isHomeScreen = true;
+    private boolean isExpanded = true;
+    private int expandedHeightPx;
+    private int collapsedHeightPx;
+
+    private final Runnable autoCollapseRunnable = this::collapseNavBar;
 
     private final Runnable redirectWatchdog = new Runnable() {
         @Override
@@ -68,6 +79,9 @@ public final class LauncherAccessibilityService extends AccessibilityService {
             LayoutInflater inflater = LayoutInflater.from(this);
             navBarOverlay = inflater.inflate(R.layout.overlay_nav_bar, null);
 
+            buttonsContainer = navBarOverlay.findViewById(R.id.nav_buttons_container);
+            handleContainer = navBarOverlay.findViewById(R.id.nav_handle_container);
+
             int overlayType;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 overlayType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
@@ -79,31 +93,117 @@ public final class LauncherAccessibilityService extends AccessibilityService {
                     | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                     | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
 
-            int heightPx = (int) TypedValue.applyDimension(
+            expandedHeightPx = (int) TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP, 46, getResources().getDisplayMetrics());
+            collapsedHeightPx = (int) TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, 14, getResources().getDisplayMetrics());
 
-            WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+            overlayParams = new WindowManager.LayoutParams(
                     WindowManager.LayoutParams.MATCH_PARENT,
-                    heightPx,
+                    expandedHeightPx,
                     overlayType,
                     flags,
                     PixelFormat.TRANSLUCENT);
 
-            params.gravity = Gravity.BOTTOM;
+            overlayParams.gravity = Gravity.BOTTOM;
 
             ImageButton btnBack = navBarOverlay.findViewById(R.id.btn_nav_back);
             ImageButton btnHome = navBarOverlay.findViewById(R.id.btn_nav_home);
             ImageButton btnRecents = navBarOverlay.findViewById(R.id.btn_nav_recents);
 
-            btnBack.setOnClickListener(v -> triggerBack());
-            btnHome.setOnClickListener(v -> launchCleanHome());
-            btnRecents.setOnClickListener(v -> triggerRecents());
+            btnBack.setOnClickListener(v -> {
+                triggerBack();
+                if (!isHomeScreen) {
+                    scheduleAutoCollapse(1200L);
+                }
+            });
 
-            windowManager.addView(navBarOverlay, params);
+            btnHome.setOnClickListener(v -> {
+                isHomeScreen = true;
+                expandNavBar();
+                launchCleanHome();
+            });
+
+            btnRecents.setOnClickListener(v -> {
+                triggerRecents();
+                if (!isHomeScreen) {
+                    scheduleAutoCollapse(3000L);
+                }
+            });
+
+            // Swipe up or tap on the bottom handle to reveal full navigation bar
+            handleContainer.setOnTouchListener(new View.OnTouchListener() {
+                private float startY = 0;
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            startY = event.getRawY();
+                            return true;
+                        case MotionEvent.ACTION_MOVE:
+                            if (startY - event.getRawY() > 8) { // Swiped upwards
+                                expandNavBar();
+                                return true;
+                            }
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            expandNavBar();
+                            return true;
+                    }
+                    return true;
+                }
+            });
+
+            // Tap outside the expanded bar collapses it back in other apps
+            navBarOverlay.setOnTouchListener((v, event) -> {
+                if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
+                    if (!isHomeScreen && isExpanded) {
+                        collapseNavBar();
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            windowManager.addView(navBarOverlay, overlayParams);
             Log.i(TAG, "Custom navigation bar overlay added successfully");
         } catch (Exception e) {
             Log.e(TAG, "Error displaying navigation bar overlay", e);
         }
+    }
+
+    private void expandNavBar() {
+        if (windowManager == null || navBarOverlay == null || overlayParams == null) return;
+        handler.removeCallbacks(autoCollapseRunnable);
+        isExpanded = true;
+        if (buttonsContainer != null) buttonsContainer.setVisibility(View.VISIBLE);
+        if (handleContainer != null) handleContainer.setVisibility(View.GONE);
+        overlayParams.height = expandedHeightPx;
+        try {
+            windowManager.updateViewLayout(navBarOverlay, overlayParams);
+        } catch (Exception ignored) {}
+
+        if (!isHomeScreen) {
+            scheduleAutoCollapse(3500L);
+        }
+    }
+
+    private void collapseNavBar() {
+        if (windowManager == null || navBarOverlay == null || overlayParams == null) return;
+        if (isHomeScreen) return; // Keep visible on home screen
+        handler.removeCallbacks(autoCollapseRunnable);
+        isExpanded = false;
+        if (buttonsContainer != null) buttonsContainer.setVisibility(View.GONE);
+        if (handleContainer != null) handleContainer.setVisibility(View.VISIBLE);
+        overlayParams.height = collapsedHeightPx;
+        try {
+            windowManager.updateViewLayout(navBarOverlay, overlayParams);
+        } catch (Exception ignored) {}
+    }
+
+    private void scheduleAutoCollapse(long delayMs) {
+        handler.removeCallbacks(autoCollapseRunnable);
+        handler.postDelayed(autoCollapseRunnable, delayMs);
     }
 
     private void removeNavBarOverlay() {
@@ -166,8 +266,19 @@ public final class LauncherAccessibilityService extends AccessibilityService {
             redirectAttempts = 0;
             handler.removeCallbacks(redirectWatchdog);
             redirectWatchdog.run();
-        } else if (getPackageName().contentEquals(pkg)) {
-            handler.removeCallbacks(redirectWatchdog);
+            return;
+        }
+
+        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            boolean nowHome = getPackageName().contentEquals(pkg);
+            if (nowHome != isHomeScreen) {
+                isHomeScreen = nowHome;
+                if (isHomeScreen) {
+                    expandNavBar();
+                } else {
+                    collapseNavBar();
+                }
+            }
         }
     }
 

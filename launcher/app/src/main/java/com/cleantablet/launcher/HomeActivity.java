@@ -238,14 +238,49 @@ public final class HomeActivity extends Activity {
         loadApps();
     }
 
+    private static final int REQUEST_PICK_WALLPAPER = 1001;
+
     private void chooseWallpaper() {
-        try {
-            startActivity(new Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER));
-        } catch (ActivityNotFoundException first) {
+        CharSequence[] options = new CharSequence[] {
+                getString(R.string.wallpaper_photos),
+                getString(R.string.wallpaper_system)
+        };
+        new android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.wallpaper)
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                            intent.setType("image/*");
+                            startActivityForResult(Intent.createChooser(intent, getString(R.string.wallpaper)), REQUEST_PICK_WALLPAPER);
+                        } catch (Exception e) {
+                            Toast.makeText(this, "No image picker app found", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        try {
+                            startActivity(new Intent(Intent.ACTION_SET_WALLPAPER));
+                        } catch (ActivityNotFoundException e) {
+                            Toast.makeText(this, "System wallpaper picker unavailable", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_PICK_WALLPAPER && resultCode == RESULT_OK && data != null && data.getData() != null) {
             try {
-                startActivity(new Intent(Intent.ACTION_SET_WALLPAPER));
-            } catch (ActivityNotFoundException second) {
-                Toast.makeText(this, "Wallpaper settings are unavailable on this firmware", Toast.LENGTH_SHORT).show();
+                java.io.InputStream is = getContentResolver().openInputStream(data.getData());
+                if (is != null) {
+                    WallpaperManager wm = WallpaperManager.getInstance(getApplicationContext());
+                    wm.setStream(is);
+                    is.close();
+                    Toast.makeText(this, R.string.wallpaper_success, Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                Toast.makeText(this, "Could not set wallpaper: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
     }
